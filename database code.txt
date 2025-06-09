@@ -1,0 +1,89 @@
+Project API_DB_Schema {
+  database_type: "PostgreSQL"
+  Note: "API to serve datasets from various endpoints to verified users using API key authentication and role-based access control"
+}
+
+Table Organizations {
+  id          uuid [pk]
+  name        varchar
+  type        varchar // 'university', 'business', 'ministry', etc.
+  created_at  timestamp
+
+  Note: "Represents each unique organization using the API"
+}
+
+Table Roles {
+  id              uuid [pk]
+  name            varchar [unique] // 'manager', 'student', etc.
+  can_read        boolean
+  can_update      boolean
+  can_delete      boolean
+  can_post        boolean
+
+  Note: "Defines a reusable permission set per role"
+}
+
+Table Users {
+  id                uuid [pk]
+  name              varchar
+  email             varchar [unique]
+  organization_id   uuid [ref: > Organizations.id]
+  role_id           uuid [not null,ref: > Roles.id]
+  created_at        timestamp
+
+  Note: "Each user is tied to an organization and has a role defining their base permissions"
+}
+
+Table API_Keys {
+  id              uuid [pk]
+  user_id         uuid [ref: > Users.id]
+  key_hash        varchar
+  is_active       boolean
+  created_at      timestamp
+
+  Note: "Hashed API keys issued to each user for authentication"
+}
+
+Table Endpoints {
+  id              uuid [pk]
+  name            varchar
+  base_url        varchar
+  description     text
+
+  Note: "Endpoints represent the source where datasets are hosted or served from"
+}
+
+Table Datasets {
+  id              uuid [pk]
+  endpoint_id     uuid [not null, ref: > Endpoints.id]
+  name            varchar
+  description     text
+  category        varchar
+  source_url      varchar
+  published_at    date
+  format          varchar // 'csv', 'json', etc.
+
+  Note: "Statistical datasets accessible via API"
+}
+
+Table Access_Logs {
+  id              uuid [pk]
+  user_id         uuid [ref: > Users.id]
+  dataset_id      uuid [not null,ref: > Datasets.id]
+  accessed_at     timestamp
+  endpoint        varchar
+  status_code     int
+
+  Note: "Logs each dataset access attempt per user"
+}
+
+Table User_Permissions {
+  id              uuid [pk]
+  user_id         uuid [ref: > Users.id]
+  dataset_id      uuid [ref: > Datasets.id, null] // NULL means applies to all datasets
+  can_read        boolean
+  can_update      boolean
+  can_delete      boolean
+
+  Note: "Optional per-user permission overrides; falls back to role permissions when not defined"
+}
