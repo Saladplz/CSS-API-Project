@@ -1,1 +1,2 @@
 # CSS-API-Project
+## The dashboard is integrated with the API only in the CLI, so when a user selects the GET method for example, then enters a command like "/datasets/health" it would create an API request to read the file or dataset from the available datasets. however, the left side or the manual select part of the dashboard is not using the API, so it fetches the dataset manually when the user clicks on it
